@@ -30,6 +30,8 @@ import:
 - package: github.com/decred/bitset
 - package: github.com/decred/blake256
 - package: github.com/decred/dcrrpcclient
+  repo: https://github.com/jrick/btcrpcclient.git
+  version: ntfnapi
 - package: github.com/decred/dcrutil
   subpackages:
   - bloom
