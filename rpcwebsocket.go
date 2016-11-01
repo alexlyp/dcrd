@@ -1216,6 +1216,9 @@ func (m *wsNotificationManager) notifyRelevantTxAccepted(tx *dcrutil.Tx,
 			}
 			for _, a := range addrs {
 				if f.existsAddress(a) {
+					if clientsToNotify == nil {
+						clientsToNotify = make(map[chan struct{}]*wsClient)
+					}
 					clientsToNotify[q] = c
 
 					op := wire.OutPoint{
