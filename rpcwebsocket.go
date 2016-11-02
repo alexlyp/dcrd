@@ -518,22 +518,6 @@ type notificationRegisterStakeDifficulty wsClient
 type notificationUnregisterStakeDifficulty wsClient
 type notificationRegisterNewMempoolTxs wsClient
 type notificationUnregisterNewMempoolTxs wsClient
-type notificationRegisterSpent struct {
-	wsc *wsClient
-	ops []*wire.OutPoint
-}
-type notificationUnregisterSpent struct {
-	wsc *wsClient
-	op  *wire.OutPoint
-}
-type notificationRegisterAddr struct {
-	wsc   *wsClient
-	addrs []string
-}
-type notificationUnregisterAddr struct {
-	wsc  *wsClient
-	addr string
-}
 
 // notificationHandler reads notifications and control messages from the queue
 // handler and processes one at a time.
@@ -656,56 +640,6 @@ out:
 				delete(blockNotifications, wsc.quit)
 				delete(txNotifications, wsc.quit)
 				delete(clients, wsc.quit)
-
-			case *notificationRegisterSpent:
-				n.wsc.Lock()
-				f := n.wsc.filterData
-				if f == nil {
-					n.wsc.filterData = makeWSClientFilter(nil, n.ops)
-				}
-				n.wsc.Unlock()
-				if f != nil {
-					f.mu.Lock()
-					for _, op := range n.ops {
-						f.addUnspentOutPoint(op)
-					}
-					f.mu.Unlock()
-				}
-
-			case *notificationUnregisterSpent:
-				n.wsc.Lock()
-				f := n.wsc.filterData
-				n.wsc.Unlock()
-				if f != nil {
-					f.mu.Lock()
-					f.removeUnspentOutPoint(n.op)
-					f.mu.Unlock()
-				}
-
-			case *notificationRegisterAddr:
-				n.wsc.Lock()
-				f := n.wsc.filterData
-				if f == nil {
-					n.wsc.filterData = makeWSClientFilter(n.addrs, nil)
-				}
-				n.wsc.Unlock()
-				if f != nil {
-					f.mu.Lock()
-					for _, a := range n.addrs {
-						f.addAddressStr(a)
-					}
-					f.mu.Unlock()
-				}
-
-			case *notificationUnregisterAddr:
-				n.wsc.Lock()
-				f := n.wsc.filterData
-				n.wsc.Unlock()
-				if f != nil {
-					f.mu.Lock()
-					f.removeAddressStr(n.addr)
-					f.mu.Unlock()
-				}
 
 			case *notificationRegisterNewMempoolTxs:
 				wsc := (*wsClient)(n)
@@ -1149,27 +1083,6 @@ func (m *wsNotificationManager) notifyForNewTx(clients map[chan struct{}]*wsClie
 	}
 }
 
-// RegisterSpentRequests requests a notification when each of the passed
-// outpoints is confirmed spent (contained in a block connected to the main
-// chain) for the passed websocket client.  The request is automatically
-// removed once the notification has been sent.
-func (m *wsNotificationManager) RegisterSpentRequests(wsc *wsClient, ops []*wire.OutPoint) {
-	m.queueNotification <- &notificationRegisterSpent{
-		wsc: wsc,
-		ops: ops,
-	}
-}
-
-// UnregisterSpentRequest removes a request from the passed websocket client
-// to be notified when the passed outpoint is confirmed spent (contained in a
-// block connected to the main chain).
-func (m *wsNotificationManager) UnregisterSpentRequest(wsc *wsClient, op *wire.OutPoint) {
-	m.queueNotification <- &notificationUnregisterSpent{
-		wsc: wsc,
-		op:  op,
-	}
-}
-
 // txHexString returns the serialized transaction encoded in hexadecimal.
 func txHexString(tx *wire.MsgTx) string {
 	buf := bytes.NewBuffer(make([]byte, 0, tx.SerializeSize()))
@@ -1244,26 +1157,6 @@ func (m *wsNotificationManager) notifyRelevantTxAccepted(tx *dcrutil.Tx,
 		for _, c := range clientsToNotify {
 			c.QueueNotification(marshalled)
 		}
-	}
-}
-
-// RegisterTxOutAddressRequests requests notifications to the passed websocket
-// client when a transaction output spends to the passed address.
-func (m *wsNotificationManager) RegisterTxOutAddressRequests(wsc *wsClient,
-	addrs []string) {
-	m.queueNotification <- &notificationRegisterAddr{
-		wsc:   wsc,
-		addrs: addrs,
-	}
-}
-
-// UnregisterTxOutAddressRequest removes a request from the passed websocket
-// client to be notified when a transaction spends to the passed address.
-func (m *wsNotificationManager) UnregisterTxOutAddressRequest(wsc *wsClient,
-	addr string) {
-	m.queueNotification <- &notificationUnregisterAddr{
-		wsc:  wsc,
-		addr: addr,
 	}
 }
 
