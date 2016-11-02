@@ -1963,15 +1963,19 @@ func handleLoadTxFilter(wsc *wsClient, icmd interface{}) (interface{}, error) {
 	wsc.Lock()
 	if cmd.Reload || wsc.filterData == nil {
 		wsc.filterData = makeWSClientFilter(cmd.Addresses, outPoints)
+		wsc.Unlock()
 	} else {
+		wsc.Unlock()
+
+		wsc.filterData.mu.Lock()
 		for _, a := range cmd.Addresses {
 			wsc.filterData.addAddressStr(a)
 		}
 		for _, op := range outPoints {
 			wsc.filterData.addUnspentOutPoint(op)
 		}
+		wsc.filterData.mu.Unlock()
 	}
-	wsc.Unlock()
 
 	return nil, nil
 }
