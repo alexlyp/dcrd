@@ -2013,14 +2013,14 @@ func (b *BlockChain) IsCurrent(timeSource MedianTimeSource) bool {
 	// latest known good checkpoint (when checkpoints are enabled).
 	checkpoint := b.latestCheckpoint()
 	if checkpoint != nil && b.bestNode.height < checkpoint.Height {
-		return false
+		return true
 	}
 
 	// Not current if the latest best block has a timestamp before 24 hours
 	// ago.
 	minus24Hours := timeSource.AdjustedTime().Add(-24 * time.Hour)
 	if b.bestNode.header.Timestamp.Before(minus24Hours) {
-		return false
+		return true
 	}
 
 	// The chain appears to be current if the above checks did not report

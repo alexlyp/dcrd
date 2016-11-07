@@ -54,13 +54,13 @@ const (
 
 	// stallTickInterval is the interval of time between each check for
 	// stalled peers.
-	stallTickInterval = 15 * time.Second
+	stallTickInterval = 60 * time.Second
 
 	// stallResponseTimeout is the base maximum amount of time messages that
 	// expect a response will wait before disconnecting the peer for
 	// stalling.  The deadlines are adjusted for callback running times and
 	// only checked on each stall tick interval.
-	stallResponseTimeout = 30 * time.Second
+	stallResponseTimeout = 120 * time.Second
 
 	// trickleTimeout is the duration of the ticker which trickles down the
 	// inventory to a peer.
