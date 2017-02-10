@@ -629,7 +629,36 @@ var TestNetParams = Params{
 	RuleChangeActivationMultiplier: 3,    // 75%
 	RuleChangeActivationDivisor:    4,
 	RuleChangeActivationWindow:     5040, // 1 week
-
+	Deployments: map[uint32][]ConsensusDeployment{
+		4: {{
+			Vote: Vote{
+				Id:          "voteidmaxsize",
+				Description: "Change maximum allowed block size from 1MiB to 1.25MB",
+				Mask:        0x0006, // Bits 1 and 2
+				Choices: []Choice{{
+					Id:          "abstain",
+					Description: "abstain voting for change",
+					Bits:        0x0000,
+					IsIgnore:    true,
+					IsNo:        false,
+				}, {
+					Id:          "no",
+					Description: "reject changing max allowed block size",
+					Bits:        0x0002, // Bit 1
+					IsIgnore:    false,
+					IsNo:        false,
+				}, {
+					Id:          "yes",
+					Description: "accept changing max allowed block size",
+					Bits:        0x0004, // Bit 2
+					IsIgnore:    false,
+					IsNo:        true,
+				}},
+			},
+			StartTime:  1486598400, // Feb 9th, 2017
+			ExpireTime: 1496966400, // Jun 9th, 2017
+		}},
+	},
 	// Enforce current block version once majority of the network has
 	// upgraded.
 	// 51% (51 / 100)
