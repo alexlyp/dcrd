@@ -2295,7 +2295,8 @@ func (b *BlockChain) initThresholdCaches() error {
 			cache := &b.deploymentCaches[version][id]
 			checker := deploymentChecker{deployment: deployment,
 				chain: b}
-			_, err := b.thresholdState(prevNode, checker, cache)
+			_, err := b.thresholdState(version, prevNode, checker,
+				cache)
 			if err != nil {
 				return err
 			}

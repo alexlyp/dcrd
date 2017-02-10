@@ -217,7 +217,7 @@ func newThresholdCaches(params *chaincfg.Params) map[uint32][]thresholdStateCach
 // threshold states for previous windows are only calculated once.
 //
 // This function MUST be called with the chain state lock held (for writes).
-func (b *BlockChain) thresholdState(prevNode *blockNode, checker thresholdConditionChecker, cache *thresholdStateCache) (ThresholdStateTuple, error) {
+func (b *BlockChain) thresholdState(version uint32, prevNode *blockNode, checker thresholdConditionChecker, cache *thresholdStateCache) (ThresholdStateTuple, error) {
 	// The threshold state for the window that contains the genesis block is
 	// defined by definition.
 	confirmationWindow := int64(checker.RuleChangeActivationWindow())
@@ -226,12 +226,16 @@ func (b *BlockChain) thresholdState(prevNode *blockNode, checker thresholdCondit
 		return newThresholdState(ThresholdDefined, invalidChoice), nil
 	}
 
-	wantHeight := calcWantHeight(svh,
-		int64(checker.RuleChangeActivationWindow()), prevNode.height)
+	// Make sure we are on the correct stake version.
+	if prevNode.header.StakeVersion != version {
+		return newThresholdState(ThresholdDefined, invalidChoice), nil
+	}
 
 	// Get the ancestor that is the last block of the previous confirmation
 	// window in order to get its threshold state.  This can be done because
 	// the state is the same for all blocks within a given window.
+	wantHeight := calcWantHeight(svh,
+		int64(checker.RuleChangeActivationWindow()), prevNode.height)
 	var err error
 	prevNode, err = b.ancestorNode(prevNode, wantHeight)
 	if err != nil {
@@ -447,8 +451,7 @@ func (b *BlockChain) ThresholdState(hash *chainhash.Hash, version uint32, deploy
 			cache := &b.deploymentCaches[version][k]
 			b.chainLock.Lock()
 			defer b.chainLock.Unlock()
-			return b.thresholdState(node, checker,
-				cache)
+			return b.thresholdState(version, node, checker, cache)
 		}
 	}
 	return ThresholdStateTuple{State: ThresholdInvalid,

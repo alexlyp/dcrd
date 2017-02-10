@@ -142,6 +142,40 @@ func TestVoting(t *testing.T) {
 			},
 		},
 		{
+			name:              "pedro wrong version",
+			vote:              pedro,
+			blockVersion:      3,
+			startStakeVersion: ourVersion + 1,
+			voteBitsCounts: []voteBitsCount{
+				{
+					voteBits: 0x01,
+					count:    uint32(params.StakeValidationHeight),
+				},
+				{
+					voteBits: 0x01,
+					count:    params.RuleChangeActivationWindow - 1,
+				},
+				{
+					voteBits: 0x03,
+					count:    params.RuleChangeActivationWindow,
+				},
+			},
+			expectedState: []ThresholdStateTuple{
+				{
+					State:  ThresholdDefined,
+					Choice: invalidChoice,
+				},
+				{
+					State:  ThresholdDefined,
+					Choice: invalidChoice,
+				},
+				{
+					State:  ThresholdDefined,
+					Choice: invalidChoice,
+				},
+			},
+		},
+		{
 			name:              "pedro 100% yes",
 			vote:              pedro,
 			blockVersion:      3,
