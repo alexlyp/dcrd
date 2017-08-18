@@ -1089,7 +1089,7 @@ func handleCreateRawSSRtx(s *rpcServer, cmd interface{}, closeChan <-chan struct
 
 	// Try to fetch the ticket from the block database.
 	ticketUtx, err := s.chain.FetchUtxoEntry(txHash)
-	if err != nil {
+	if ticketUtx == nil || err != nil {
 		return nil, rpcNoTxInfoError(txHash)
 	}
 	if t := ticketUtx.TransactionType(); t != stake.TxTypeSStx {
