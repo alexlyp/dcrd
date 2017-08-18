@@ -932,8 +932,8 @@ func handleCreateRawSSGenTx(s *rpcServer, cmd interface{}, closeChan <-chan stru
 
 	// Try to fetch the ticket from the block database.
 	ticketUtx, err := s.chain.FetchUtxoEntry(txHash)
-	if err != nil {
-		rpcNoTxInfoError(txHash)
+	if ticketUtx == nil || err != nil {
+		return nil, rpcNoTxInfoError(txHash)
 	}
 	if t := ticketUtx.TransactionType(); t != stake.TxTypeSStx {
 		return nil, rpcDeserializationError("Invalid Tx type: %v", t)
